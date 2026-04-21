@@ -1,14 +1,29 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { ShieldAlert, Mail, Lock, Fingerprint, Eye } from 'lucide-react';
+import { ShieldAlert, Mail, Lock, Fingerprint, Eye, EyeOff } from 'lucide-react';
+import { supabase } from '../api/supabase';
 
 export default function Login({ onLogin }: { onLogin: () => void }) {
   const [operatorId, setOperatorId] = useState('');
   const [cipher, setCipher] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin();
+    setLoading(true);
+    setError(null);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: operatorId,
+      password: cipher,
+    });
+
+    if (error) {
+      setError('ACCESS_DENIED: ' + error.message);
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,20 +77,35 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
                   placeholder="••••••••••••"
                   className="w-full bg-surface-lowest/50 border border-outline-variant/30 rounded-lg py-4 pl-12 pr-12 text-xs font-label placeholder:text-on-surface-variant/20 focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container/20 transition-all duration-300 text-white"
                 />
-                <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 hover:text-white transition-colors">
-                  <Eye size={16} />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-red-500 text-[10px] font-headline text-center py-2 px-3 bg-red-500/10 rounded-lg border border-red-500/20 uppercase tracking-widest"
+              >
+                {error}
+              </motion.div>
+            )}
+
             <div className="pt-4 space-y-4">
               <motion.button 
-                whileHover={{ scale: 1.02, brightness: 1.1 }}
+                whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                className="w-full bg-gradient-to-r from-secondary-container to-secondary-fixed-dim text-white font-headline text-[10px] font-bold uppercase tracking-[0.2em] py-4 rounded-lg glow-purple transition-all duration-300"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-secondary-container to-secondary-fixed-dim text-white font-headline text-[10px] font-bold uppercase tracking-[0.2em] py-4 rounded-lg glow-purple transition-all duration-300 disabled:opacity-50"
               >
-                Initiate Sequence
+                {loading ? 'Authenticating...' : 'Initiate Sequence'}
               </motion.button>
 
               <div className="flex items-center gap-4 py-2">

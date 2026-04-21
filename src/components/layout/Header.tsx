@@ -1,11 +1,13 @@
-import { Search, Bell, Settings, X, Info } from 'lucide-react';
+import { Search, Bell, Settings, X, Info, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const { user, signOut } = useAuth();
 
   return (
     <header className="fixed top-0 w-full flex justify-between items-center px-6 h-16 bg-surface-lowest/50 backdrop-blur-xl border-b border-white/10 z-50">
@@ -123,16 +125,21 @@ export default function Header() {
           </AnimatePresence>
         </div>
 
+        <button 
+          onClick={signOut}
+          className="p-2 text-on-surface-variant hover:text-red-500 transition-colors rounded-lg hover:bg-white/5"
+          title="Logout"
+        >
+          <LogOut size={18} />
+        </button>
+
         <Link 
           to="/profile"
           className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 p-[1px] bg-gradient-to-br from-white/10 to-transparent hover:border-primary-container transition-all active:scale-95"
         >
-          <img 
-            src="https://picsum.photos/seed/operator/64/64" 
-            alt="Operator" 
-            className="w-full h-full object-cover rounded-[7px]"
-            referrerPolicy="no-referrer"
-          />
+          <div className="w-full h-full rounded-[7px] bg-primary-container/20 flex items-center justify-center font-headline text-primary-container text-xs">
+            {user?.email?.charAt(0).toUpperCase() || 'O'}
+          </div>
         </Link>
       </div>
     </header>
